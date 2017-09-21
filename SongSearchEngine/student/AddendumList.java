@@ -89,7 +89,7 @@ public class AddendumList<E> implements Iterable<E> {
 	//   (which may be the index after the last item)
 	public int findFirstInArray(E item, L2Array a){
 		System.out.println("Look for " + item.toString());
-		int index = binaryFindFirst(0, a.numUsed - 1, item, a);
+		int index = binaryFindFirst2(0, a.numUsed - 1, item, a);
 		System.out.println("Found at " + index + "\n");
 		return index;
 		
@@ -106,22 +106,48 @@ public class AddendumList<E> implements Iterable<E> {
 		return -a.numUsed - 1;		*/							//item should go at end of array
 	}
 	
-	private int binaryFindFirst(int first, int last, E item, L2Array a) {
+	//This search continues unless item is first in array
+	private int binaryFindFirst1(int first, int last, E item, L2Array a) {
 		int mid = (last + first) / 2;
 		int cmpResult = comp.compare(a.items[mid], item);
 		if (cmpResult == 0) {
 			if (mid == 0 || comp.compare(a.items[mid], a.items[mid - 1]) != 0) return mid;
-			else return binaryFindFirst(first, mid - 1, item, a);
-		} else if (last < first) {
-			if (mid != 0) return -mid - 2;
-			else return -mid -1;
-		} else if (cmpResult > 0) {
-			return binaryFindFirst(first, mid - 1, item, a);
-		} else if (cmpResult < 0) {
-			return binaryFindFirst(mid + 1, last, item, a);
-		} else return -404;
+			else return binaryFindFirst1(first, mid - 1, item, a);
+		}
+		else if (last < first) return -first - 1;
+		else if (cmpResult > 0) return binaryFindFirst1(first, mid - 1, item, a);
+		else if (cmpResult < 0) return binaryFindFirst1(mid + 1, last, item, a);
+		else return -404;
 	}
-
+	
+	//This search iterates backwards after any match is found
+	private int binaryFindFirst2(int first, int last, E item, L2Array a) {
+		int mid = (last + first) / 2;
+		int cmpResult = comp.compare(a.items[mid], item);
+		if (last < first) return -first - 1;
+		else if (cmpResult == 0) {
+			while (mid != 0 && comp.compare(a.items[mid], a.items[mid - 1]) == 0) {
+				mid--;
+			}
+			return mid;
+		} else if (cmpResult > 0) return binaryFindFirst2(first, mid - 1, item, a);
+		else if (cmpResult < 0) return binaryFindFirst2(mid + 1, last, item, a);
+		return -mid - 1;
+	}
+	
+	private int binaryFindAfter2(int first, int last, E item, L2Array a) {
+		int mid = (last + first) / 2;
+		int cmpResult = comp.compare(a.items[mid], item);
+		if (last < first) return first;
+		else if (cmpResult == 0) {
+			while (mid != a.numUsed - 1 && comp.compare(a.items[mid + 1], a.items[mid]) == 0) {
+				mid++;
+			}
+			return mid + 1;
+		} else if (cmpResult > 0) return binaryFindAfter2(first, mid - 1, item, a);
+		else if (cmpResult < 0) return binaryFindAfter2(mid + 1, last, item, a);
+		return first;
+	}
 
 	/**
 	 * check if list contains a match
@@ -140,9 +166,8 @@ public class AddendumList<E> implements Iterable<E> {
 	// this might be an unused slot at the end of the array
 	// note: this will only be used on the last (very small) addendum array
 	public int findIndexAfter(E item, L2Array a){
-		// TO DO
-
-		return 0;
+		int index = binaryFindAfter2(0, a.numUsed - 1, item, a);
+		return index;
 	}
 
 	/** 
@@ -166,6 +191,39 @@ public class AddendumList<E> implements Iterable<E> {
 	// note: this method does not add a new empty addendum array to the end, that will need to be done elsewhere 
 	public void merge1Level() {
 		// TO DO
+		int mergeIndex;							//index to merge individual elements at
+		L2Array lastArray = (AddendumList<E>.L2Array) l1array[l1numUsed - 1];
+		L2Array secondLastArray = (AddendumList<E>.L2Array) l1array[l1numUsed - 2]; 
+		L2Array newArray = new L2Array(lastArray.numUsed + secondLastArray.numUsed);
+		int j = 0;									//tracking in lastArray
+		int k = 0;									//tracking in newArray
+		if (l1numUsed < 2) return;
+		for (int i = 0; i < l1numUsed; i++) {
+			mergeIndex = binaryFindAfter2(0, secondLastArray.numUsed, lastArray.items[i], secondLastArray);
+			for (int l = j; l < mergeIndex; l++, j++) {
+				newArray.items[newArray.numUsed] = lastArray.items[l];
+				newArray.numUsed++;
+			}
+			newArray.items[newArray.numUsed] = lastArray.items[i];
+			newArray.numUsed++;
+		}
+		for(int i = 0; i < secondLastArray.numUsed; i++) {
+			System.out.print("[" + secondLastArray.items[i] + "]");
+		}
+		System.out.println();
+		for (int i = 0; i < lastArray.numUsed; i++) {
+			System.out.print("[" + lastArray.items[i] + "]");
+		}
+		System.out.println();
+		for (int i = 0; i < newArray.numUsed; i++) {
+			System.out.print("[" + newArray.items[i] + "]");
+		}
+		System.out.println("\n-----------------------------------------");
+		newArray.numUsed = k;
+		l1array[l1numUsed - 2] = newArray;
+		l1array[l1numUsed - 1] = null;
+		l1numUsed--;
+		size--;
 
 	}
 	
