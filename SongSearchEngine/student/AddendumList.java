@@ -88,7 +88,12 @@ public class AddendumList<E> implements Iterable<E> {
 	//   The insertion point is defined as the point at which the key would be inserted into the array,
 	//   (which may be the index after the last item)
 	public int findFirstInArray(E item, L2Array a){
-		int cmpResult = 0;										//stores result of comparator
+		System.out.println("Look for " + item.toString());
+		int index = binaryFindFirst(0, a.numUsed - 1, item, a);
+		System.out.println("Found at " + index + "\n");
+		return index;
+		
+		/*int cmpResult = 0;										//stores result of comparator
 		for (int i = 0; i < a.numUsed; i++) {					//loops through all elements in a
 			cmpResult = comp.compare(item, a.items[i]);
 			if (cmpResult == 0) {								//item found
@@ -98,7 +103,23 @@ public class AddendumList<E> implements Iterable<E> {
 				return -i - 1;									//passed where item should go
 			}
 		}
-		return -a.numUsed - 1;									//item should go at end of array
+		return -a.numUsed - 1;		*/							//item should go at end of array
+	}
+	
+	private int binaryFindFirst(int first, int last, E item, L2Array a) {
+		int mid = (last + first) / 2;
+		int cmpResult = comp.compare(a.items[mid], item);
+		if (cmpResult == 0) {
+			if (mid == 0 || comp.compare(a.items[mid], a.items[mid - 1]) != 0) return mid;
+			else return binaryFindFirst(first, mid - 1, item, a);
+		} else if (last < first) {
+			if (mid != 0) return -mid - 2;
+			else return -mid -1;
+		} else if (cmpResult > 0) {
+			return binaryFindFirst(first, mid - 1, item, a);
+		} else if (cmpResult < 0) {
+			return binaryFindFirst(mid + 1, last, item, a);
+		} else return -404;
 	}
 
 
@@ -236,5 +257,7 @@ public class AddendumList<E> implements Iterable<E> {
 		public void remove() {
 			throw new UnsupportedOperationException();	
 		}
+		
+		
 	}
 }
