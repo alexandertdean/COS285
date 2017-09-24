@@ -182,7 +182,46 @@ public class AddendumList<E> implements Iterable<E> {
 	 */
 	public boolean add(E item){
 		// TO DO
-		
+		L2Array insertionArray = (L2Array)l1array[l1numUsed - 1];
+		int mergeIndex = findIndexAfter(item, insertionArray);
+		if (l1numUsed < 2) {
+			if (insertionArray.numUsed == insertionArray.items.length) {
+				L2Array tempArray = new L2Array(L2_MINIMUM_SIZE);
+				tempArray.items[0] = item;
+				tempArray.numUsed++;
+				l1array[l1numUsed] = tempArray;
+				l1numUsed++;
+				size++;
+			} else {
+				
+				for (int i = insertionArray.numUsed; i > mergeIndex; i--) {
+					insertionArray.items[i] = insertionArray.items[i - 1];
+				}
+				insertionArray.items[mergeIndex] = item;
+				insertionArray.numUsed++;
+				size++;
+				if (insertionArray.numUsed == insertionArray.items.length) {
+					l1array[l1numUsed] = new L2Array(L2_MINIMUM_SIZE);
+					l1numUsed++;
+				}
+			}
+		} else {
+			for (int i = insertionArray.numUsed; i > mergeIndex; i--) {
+				insertionArray.items[i] = insertionArray.items[i - 1];
+			}
+			insertionArray.items[mergeIndex] = item;
+			insertionArray.numUsed++;
+			size++;
+			if (insertionArray.numUsed == insertionArray.items.length || insertionArray.items.length >= ((L2Array)l1array[l1numUsed - 2]).items.length) {
+				merge1Level();
+				while (l1numUsed > 1 && ((L2Array)l1array[l1numUsed - 1]).items.length >= ((L2Array)l1array[l1numUsed - 2]).items.length) {
+					merge1Level();
+				}
+				l1array[l1numUsed] = new L2Array(L2_MINIMUM_SIZE);
+				l1numUsed++;
+			}
+			
+		}
 		return true;
 	}
 	
@@ -191,39 +230,31 @@ public class AddendumList<E> implements Iterable<E> {
 	// note: this method does not add a new empty addendum array to the end, that will need to be done elsewhere 
 	public void merge1Level() {
 		// TO DO
+		
 		int mergeIndex;							//index to merge individual elements at
 		L2Array lastArray = (AddendumList<E>.L2Array) l1array[l1numUsed - 1];
 		L2Array secondLastArray = (AddendumList<E>.L2Array) l1array[l1numUsed - 2]; 
 		L2Array newArray = new L2Array(lastArray.numUsed + secondLastArray.numUsed);
 		int j = 0;									//tracking in lastArray
-		int k = 0;									//tracking in newArray
-		if (l1numUsed < 2) return;
-		for (int i = 0; i < l1numUsed; i++) {
-			mergeIndex = binaryFindAfter2(0, secondLastArray.numUsed, lastArray.items[i], secondLastArray);
+		if (l1numUsed < 2) {
+			return;
+		}
+		for (int i = 0; i < lastArray.numUsed; i++) {
+			mergeIndex = findIndexAfter(lastArray.items[i], secondLastArray);
 			for (int l = j; l < mergeIndex; l++, j++) {
-				newArray.items[newArray.numUsed] = lastArray.items[l];
+				newArray.items[newArray.numUsed] = secondLastArray.items[l];
 				newArray.numUsed++;
 			}
 			newArray.items[newArray.numUsed] = lastArray.items[i];
 			newArray.numUsed++;
 		}
-		for(int i = 0; i < secondLastArray.numUsed; i++) {
-			System.out.print("[" + secondLastArray.items[i] + "]");
+		for (int l = j; l < secondLastArray.numUsed; l++) { 
+			newArray.items[newArray.numUsed] = secondLastArray.items[l];
+			newArray.numUsed++;
 		}
-		System.out.println();
-		for (int i = 0; i < lastArray.numUsed; i++) {
-			System.out.print("[" + lastArray.items[i] + "]");
-		}
-		System.out.println();
-		for (int i = 0; i < newArray.numUsed; i++) {
-			System.out.print("[" + newArray.items[i] + "]");
-		}
-		System.out.println("\n-----------------------------------------");
-		newArray.numUsed = k;
 		l1array[l1numUsed - 2] = newArray;
 		l1array[l1numUsed - 1] = null;
 		l1numUsed--;
-		size--;
 
 	}
 	
