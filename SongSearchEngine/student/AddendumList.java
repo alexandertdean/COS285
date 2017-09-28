@@ -1,4 +1,5 @@
 package student;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -88,25 +89,12 @@ public class AddendumList<E> implements Iterable<E> {
 	//   The insertion point is defined as the point at which the key would be inserted into the array,
 	//   (which may be the index after the last item)
 	public int findFirstInArray(E item, L2Array a){
-		System.out.println("Look for " + item.toString());
 		int index = binaryFindFirst2(0, a.numUsed - 1, item, a);
-		System.out.println("Found at " + index + "\n");
 		return index;
-		
-		/*int cmpResult = 0;										//stores result of comparator
-		for (int i = 0; i < a.numUsed; i++) {					//loops through all elements in a
-			cmpResult = comp.compare(item, a.items[i]);
-			if (cmpResult == 0) {								//item found
-				return i;
-			}
-			else if (cmpResult < 0) {
-				return -i - 1;									//passed where item should go
-			}
-		}
-		return -a.numUsed - 1;		*/							//item should go at end of array
 	}
 	
 	//This search continues unless item is first in array
+	//This is slower than binaryFindFirst2(), but maybe not for larger arrays
 	private int binaryFindFirst1(int first, int last, E item, L2Array a) {
 		int mid = (last + first) / 2;
 		int cmpResult = comp.compare(a.items[mid], item);
@@ -123,6 +111,11 @@ public class AddendumList<E> implements Iterable<E> {
 	//This search iterates backwards after any match is found
 	private int binaryFindFirst2(int first, int last, E item, L2Array a) {
 		int mid = (last + first) / 2;
+		System.out.println("NEW:" + a.items[mid] + " " + item);
+		if (a.items[mid] == null) {
+			System.out.println("null at mid");
+			return binaryFindFirst2(first, mid - 1, item, a);
+		}
 		int cmpResult = comp.compare(a.items[mid], item);
 		if (last < first) return -first - 1;
 		else if (cmpResult == 0) {
@@ -130,11 +123,18 @@ public class AddendumList<E> implements Iterable<E> {
 				mid--;
 			}
 			return mid;
-		} else if (cmpResult > 0) return binaryFindFirst2(first, mid - 1, item, a);
-		else if (cmpResult < 0) return binaryFindFirst2(mid + 1, last, item, a);
+		} else if (cmpResult > 0) {
+			System.out.println("Need to do lower half");
+			return binaryFindFirst2(first, mid - 1, item, a);
+		}
+		else if (cmpResult < 0) {
+			System.out.println("Need to do upper half");
+			return binaryFindFirst2(mid + 1, last, item, a);
+		}
 		return -mid - 1;
 	}
 	
+	//This search iterates forwards after any match is found
 	private int binaryFindAfter2(int first, int last, E item, L2Array a) {
 		int mid = (last + first) / 2;
 		int cmpResult = comp.compare(a.items[mid], item);
@@ -148,7 +148,7 @@ public class AddendumList<E> implements Iterable<E> {
 		else if (cmpResult < 0) return binaryFindAfter2(mid + 1, last, item, a);
 		return first;
 	}
-
+	
 	/**
 	 * check if list contains a match
 	 * use the findFirstInArray() helper method
@@ -181,46 +181,46 @@ public class AddendumList<E> implements Iterable<E> {
 	 * remember to increment numUsed for the L2Array inserted into, and increment size for the whole data structure
 	 */
 	public boolean add(E item){
-		// TO DO
 		L2Array insertionArray = (L2Array)l1array[l1numUsed - 1];
-		int mergeIndex = findIndexAfter(item, insertionArray);
-		if (l1numUsed < 2) {
-			if (insertionArray.numUsed == insertionArray.items.length) {
-				L2Array tempArray = new L2Array(L2_MINIMUM_SIZE);
-				tempArray.items[0] = item;
-				tempArray.numUsed++;
-				l1array[l1numUsed] = tempArray;
-				l1numUsed++;
-				size++;
-			} else {
-				
-				for (int i = insertionArray.numUsed; i > mergeIndex; i--) {
-					insertionArray.items[i] = insertionArray.items[i - 1];
-				}
-				insertionArray.items[mergeIndex] = item;
-				insertionArray.numUsed++;
-				size++;
-				if (insertionArray.numUsed == insertionArray.items.length) {
-					l1array[l1numUsed] = new L2Array(L2_MINIMUM_SIZE);
-					l1numUsed++;
-				}
-			}
-		} else {
-			for (int i = insertionArray.numUsed; i > mergeIndex; i--) {
-				insertionArray.items[i] = insertionArray.items[i - 1];
-			}
-			insertionArray.items[mergeIndex] = item;
+		if (insertionArray.numUsed == 0) {
+			//ARRAY IS EMPTY! JUST STICK IT IN
+			insertionArray.items[0] = item;
 			insertionArray.numUsed++;
 			size++;
-			if (insertionArray.numUsed == insertionArray.items.length || insertionArray.items.length >= ((L2Array)l1array[l1numUsed - 2]).items.length) {
-				merge1Level();
-				while (l1numUsed > 1 && ((L2Array)l1array[l1numUsed - 1]).items.length >= ((L2Array)l1array[l1numUsed - 2]).items.length) {
+		} else if (insertionArray.numUsed == insertionArray.items.length) {
+			//MAKE NEW ARRAY
+			if (l1numUsed == l1array.length) {
+				//L1array full, resize by 150% and copy over
+				Object[] tempArray = new Object[(int)(l1numUsed * 1.5)];	//resize l1array by 150%. Java does it for ArrayLists, so it must be good
+				System.arraycopy(l1array, 0, tempArray, 0, l1numUsed);
+			}
+			l1array[l1numUsed] = new L2Array(L2_MINIMUM_SIZE);
+			l1numUsed++;													//added new l2array
+			insertionArray = (L2Array)l1array[l1numUsed - 1];				//reassigns insertionArray to new array
+			insertionArray.items[0] = item;									//L2Array is empty, first index will mean array is still sorted
+			insertionArray.numUsed++;										//added new element to L2array
+			size++;															//added new element to AddendumList
+		} else {
+			int mergeIndex = findIndexAfter(item, insertionArray);
+			for (int i = insertionArray.numUsed; i > mergeIndex; i--) {
+				//shift items over to make room for new element
+				insertionArray.items[i] = insertionArray.items[i - 1];
+			}
+			insertionArray.items[mergeIndex] = item;						//insert item into array
+			insertionArray.numUsed++;										//added new element to L2Array
+			size++;															//added new element to AddenumList
+			//CHECK TO SEE IF WE NEED TO MERGE L2ARRAYS
+			boolean mergeCheck = l1numUsed > 1 && ((L2Array)(l1array[l1numUsed - 1])).numUsed >= ((L2Array)(l1array[l1numUsed - 2])).numUsed;
+			if (mergeCheck) {
+				while (mergeCheck) {
 					merge1Level();
+					mergeCheck = l1numUsed > 1 && ((L2Array)(l1array[l1numUsed - 1])).numUsed >= ((L2Array)(l1array[l1numUsed - 2])).numUsed;
 				}
+			}
+			if (((L2Array)(l1array[l1numUsed - 1])).numUsed == ((L2Array)(l1array[l1numUsed - 1])).items.length) {
 				l1array[l1numUsed] = new L2Array(L2_MINIMUM_SIZE);
 				l1numUsed++;
 			}
-			
 		}
 		return true;
 	}
@@ -229,33 +229,25 @@ public class AddendumList<E> implements Iterable<E> {
 	// if there are matching items, those from the earlier array go first in the merged array
 	// note: this method does not add a new empty addendum array to the end, that will need to be done elsewhere 
 	public void merge1Level() {
-		// TO DO
-		
-		int mergeIndex;							//index to merge individual elements at
+		L2Array secondLastArray = (AddendumList<E>.L2Array) l1array[l1numUsed - 2];
 		L2Array lastArray = (AddendumList<E>.L2Array) l1array[l1numUsed - 1];
-		L2Array secondLastArray = (AddendumList<E>.L2Array) l1array[l1numUsed - 2]; 
 		L2Array newArray = new L2Array(lastArray.numUsed + secondLastArray.numUsed);
-		int j = 0;									//tracking in lastArray
-		if (l1numUsed < 2) {
-			return;
-		}
+		int prevMergeIndex = 0;
+		int mergeIndex;													
 		for (int i = 0; i < lastArray.numUsed; i++) {
-			mergeIndex = findIndexAfter(lastArray.items[i], secondLastArray);
-			for (int l = j; l < mergeIndex; l++, j++) {
-				newArray.items[newArray.numUsed] = secondLastArray.items[l];
-				newArray.numUsed++;
-			}
+			mergeIndex = findIndexAfter(lastArray.items[i], secondLastArray);			//finds merging index into second last array for item in last array
+			System.arraycopy(secondLastArray.items, prevMergeIndex, newArray.items, newArray.numUsed, mergeIndex - prevMergeIndex);
+			newArray.numUsed += (mergeIndex - prevMergeIndex);
+			prevMergeIndex = mergeIndex;
 			newArray.items[newArray.numUsed] = lastArray.items[i];
 			newArray.numUsed++;
 		}
-		for (int l = j; l < secondLastArray.numUsed; l++) { 
-			newArray.items[newArray.numUsed] = secondLastArray.items[l];
-			newArray.numUsed++;
-		}
+		//get the rest of the items in the second to last array
+		System.arraycopy(secondLastArray.items, prevMergeIndex, newArray.items, newArray.numUsed, secondLastArray.numUsed - prevMergeIndex);
+		newArray.numUsed += (secondLastArray.numUsed - prevMergeIndex);
 		l1array[l1numUsed - 2] = newArray;
 		l1array[l1numUsed - 1] = null;
 		l1numUsed--;
-
 	}
 	
 	// merge all levels
@@ -266,7 +258,9 @@ public class AddendumList<E> implements Iterable<E> {
 	// The result of the merging should still be a valid addendum array with room to add in the last addendum array.
 	// The merging will likely cause the size of the array to no longer be a power of two.
 	private void mergeAllLevels() {
-		// TO DO
+		while (l1numUsed > 1) {
+			merge1Level();
+		}
 	
 	}
 
@@ -276,8 +270,8 @@ public class AddendumList<E> implements Iterable<E> {
 	 * @return the filled in array
 	 */
 	public E[] toArray(E[] a){
-		// TO DO
-		
+		this.mergeAllLevels();
+		System.arraycopy(((L2Array)l1array[0]).items, 0, a, 0, ((L2Array)l1array[0]).numUsed);
 		return a;
 	}
 
@@ -292,8 +286,17 @@ public class AddendumList<E> implements Iterable<E> {
 	 */
 	public AddendumList<E> subList(E fromElement, E toElement){
 		// TO DO
-		
-		return null;
+		AddendumList<E> newAL = this;
+		newAL.mergeAllLevels();
+		System.out.println(Arrays.toString(((L2Array)newAL.l1array[0]).items));
+		int startIndex = findFirstInArray(fromElement, (L2Array)newAL.l1array[0]);
+		if (startIndex < 0) startIndex = -startIndex - 1;
+		int sizeToCopy = findIndexAfter(toElement, (L2Array)newAL.l1array[0]) - startIndex;
+		int arraySize =  (int) Math.pow(2,Math.floor(((Math.log10(sizeToCopy)/Math.log10(2)) + 1)));					//power of 2 closest to, but greater than, number of elements copied
+		E[] tempArray = (E[])new Object[arraySize];
+		System.arraycopy(((L2Array)(newAL.l1array[0])).items, startIndex, tempArray, 0, sizeToCopy);
+		((L2Array)(newAL.l1array[0])).items = tempArray;
+		return newAL;
 	}
 
 	/**
@@ -316,6 +319,7 @@ public class AddendumList<E> implements Iterable<E> {
 		 * create iterator at start of list
 		 */
 		Itr(){
+			index = 0;
 			// TO DO
 
 		}
@@ -325,7 +329,7 @@ public class AddendumList<E> implements Iterable<E> {
 		 */
 		public boolean hasNext() {
 			// TO DO
-			
+			if ((index < ((L2Array)l1array[0]).numUsed) && (((L2Array)l1array[0]).items[index + 1] != null)) return true;
 			return false;
 		}
 
@@ -335,8 +339,8 @@ public class AddendumList<E> implements Iterable<E> {
 		 */
 		public E next() {
 			// TO DO
-
-			return null;
+			index++;
+			return ((L2Array)l1array[0]).items[index - 1];
 		}
 
 		/**
