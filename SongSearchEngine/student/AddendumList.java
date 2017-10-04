@@ -225,24 +225,27 @@ public class AddendumList<E> implements Iterable<E> {
 	// merge the last two levels
 	// if there are matching items, those from the earlier array go first in the merged array
 	// note: this method does not add a new empty addendum array to the end, that will need to be done elsewhere 
+	//todo: make this stable. I believe it is unstable if both arrays have duplicates of the same value
 	public void merge1Level() {
 		L2Array secondLastArray = (AddendumList<E>.L2Array) l1array[l1numUsed - 2];
 		L2Array lastArray = (AddendumList<E>.L2Array) l1array[l1numUsed - 1];
 		L2Array newArray = new L2Array(lastArray.numUsed + secondLastArray.numUsed);
-		int prevMergeIndex = 0;
-		int mergeIndex;													
-		for (int i = 0; i < lastArray.numUsed; i++) {
-			mergeIndex = findIndexAfter(lastArray.items[i], secondLastArray);			//finds merging index into second last array for item in last array
-			System.arraycopy(secondLastArray.items, prevMergeIndex, newArray.items, newArray.numUsed, mergeIndex - prevMergeIndex);
-			newArray.numUsed += (mergeIndex - prevMergeIndex);
-			prevMergeIndex = mergeIndex;
-			newArray.items[newArray.numUsed] = lastArray.items[i];
+		int lastIndex = 0;
+		int secondLastIndex = 0;
+		while (lastIndex < lastArray.numUsed && secondLastIndex < secondLastArray.numUsed) {
+			int cmpResult = comp.compare(lastArray.items[lastIndex], secondLastArray.items[secondLastIndex]);
+			if (cmpResult < 0) 
+				newArray.items[lastIndex + secondLastIndex] = lastArray.items[lastIndex++];
+			else newArray.items[lastIndex + secondLastIndex] = secondLastArray.items[secondLastIndex++];
 			newArray.numUsed++;
 		}
 		
-		//get the rest of the items in the second to last array
-		System.arraycopy(secondLastArray.items, prevMergeIndex, newArray.items, newArray.numUsed, secondLastArray.numUsed - prevMergeIndex);
-		newArray.numUsed += (secondLastArray.numUsed - prevMergeIndex);
+		while (lastIndex < lastArray.numUsed) {
+			newArray.items[lastIndex + secondLastIndex] = lastArray.items[lastIndex++];
+		}
+		while (secondLastIndex < secondLastArray.numUsed) {
+			newArray.items[lastIndex + secondLastIndex] = secondLastArray.items[secondLastIndex++];
+		}
 		l1array[l1numUsed - 2] = newArray;
 		l1array[l1numUsed - 1] = null;
 		l1numUsed--;
@@ -271,8 +274,18 @@ public class AddendumList<E> implements Iterable<E> {
 	 * @return the filled in array
 	 */
 	public E[] toArray(E[] a){
-		this.mergeAllLevels();
-		System.arraycopy(((L2Array)l1array[0]).items, 0, a, 0, ((L2Array)l1array[0]).numUsed);
+		AddendumList<E> newAL = new AddendumList<E>(comp);
+		newAL.l1numUsed = 0;
+		//copy elements from previous l2arrays into new l2arrys in newAL
+		for (int i = 0; i < this.l1numUsed; i++) {
+			L2Array originalArray = (L2Array)l1array[i];
+			newAL.l1array[i] = new L2Array(originalArray.numUsed);
+			System.arraycopy(originalArray.items, 0, ((L2Array)newAL.l1array[i]).items, 0, originalArray.numUsed);
+			((L2Array)newAL.l1array[i]).numUsed = originalArray.numUsed;
+			newAL.l1numUsed++;
+		}
+		newAL.mergeAllLevels();
+		System.arraycopy(((L2Array)newAL.l1array[0]).items, 0, a, 0, ((L2Array)newAL.l1array[0]).numUsed);
 		return a;
 	}
 
@@ -284,13 +297,14 @@ public class AddendumList<E> implements Iterable<E> {
 	public AddendumList<E> subList(E fromElement, E toElement){
 		//POST: returns an AddendumList with elements inclusively between fromElement and toElement
 		AddendumList<E> newAL = new AddendumList<E>(comp);
-		
+		newAL.l1numUsed = 0;
 		//copy elements from previous l2arrays into new l2arrys in newAL
-		for (int i = 0; i < l1numUsed; i++) {
+		for (int i = 0; i < this.l1numUsed; i++) {
 			L2Array originalArray = (L2Array)l1array[i];
 			newAL.l1array[i] = new L2Array(originalArray.numUsed);
 			System.arraycopy(originalArray.items, 0, ((L2Array)newAL.l1array[i]).items, 0, originalArray.numUsed);
 			((L2Array)newAL.l1array[i]).numUsed = originalArray.numUsed;
+			newAL.l1numUsed++;
 		}
 		newAL.mergeAllLevels();
 		
@@ -300,10 +314,10 @@ public class AddendumList<E> implements Iterable<E> {
 		int sizeToCopy = findIndexAfter(toElement, (L2Array)newAL.l1array[0]) - startIndex;
 		
 		//Create new array of proper size for sublist and copy elements over
-		int arraySize =  (int) Math.pow(2,Math.floor(((Math.log10(sizeToCopy)/Math.log10(2)) + 1)));					//power of 2 closest to, but greater than, number of elements copied
-		E[] tempArray = (E[])new Object[arraySize];
+		E[] tempArray = (E[])new Object[sizeToCopy];
 		System.arraycopy(((L2Array)(newAL.l1array[0])).items, startIndex, tempArray, 0, sizeToCopy);
 		((L2Array)(newAL.l1array[0])).items = tempArray;																//assigns new array to AddendumList
+		((L2Array)(newAL.l1array[0])).numUsed = sizeToCopy;
 		return newAL;
 	}
 
