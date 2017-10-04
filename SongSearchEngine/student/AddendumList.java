@@ -3,6 +3,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /*
  * AddendumList.java
@@ -111,9 +112,7 @@ public class AddendumList<E> implements Iterable<E> {
 	//This search iterates backwards after any match is found
 	private int binaryFindFirst2(int first, int last, E item, L2Array a) {
 		int mid = (last + first) / 2;
-		System.out.println("NEW:" + a.items[mid] + " " + item);
 		if (a.items[mid] == null) {
-			System.out.println("null at mid");
 			return binaryFindFirst2(first, mid - 1, item, a);
 		}
 		int cmpResult = comp.compare(a.items[mid], item);
@@ -124,11 +123,9 @@ public class AddendumList<E> implements Iterable<E> {
 			}
 			return mid;
 		} else if (cmpResult > 0) {
-			System.out.println("Need to do lower half");
 			return binaryFindFirst2(first, mid - 1, item, a);
 		}
 		else if (cmpResult < 0) {
-			System.out.println("Need to do upper half");
 			return binaryFindFirst2(mid + 1, last, item, a);
 		}
 		return -mid - 1;
@@ -242,6 +239,7 @@ public class AddendumList<E> implements Iterable<E> {
 			newArray.items[newArray.numUsed] = lastArray.items[i];
 			newArray.numUsed++;
 		}
+		
 		//get the rest of the items in the second to last array
 		System.arraycopy(secondLastArray.items, prevMergeIndex, newArray.items, newArray.numUsed, secondLastArray.numUsed - prevMergeIndex);
 		newArray.numUsed += (secondLastArray.numUsed - prevMergeIndex);
@@ -261,7 +259,10 @@ public class AddendumList<E> implements Iterable<E> {
 		while (l1numUsed > 1) {
 			merge1Level();
 		}
-	
+		if  (((L2Array)l1array[0]).items.length == ((L2Array)l1array[0]).numUsed) {
+			l1numUsed++;
+			l1array[1] = new L2Array(L2_MINIMUM_SIZE);
+		}
 	}
 
 	/**
@@ -276,77 +277,67 @@ public class AddendumList<E> implements Iterable<E> {
 	}
 
 	/**
-	 * returns a new independent AddendumList 
-	 * whose elements range from fromElemnt, inclusive, to toElement, exclusive
-	 * The original list is unaffected.
-	 * findFirstIndexOf() will be useful.
 	 * @param fromElement
 	 * @param toElement
 	 * @return the sublist
 	 */
 	public AddendumList<E> subList(E fromElement, E toElement){
-		// TO DO
-		AddendumList<E> newAL = this;
+		//POST: returns an AddendumList with elements inclusively between fromElement and toElement
+		AddendumList<E> newAL = new AddendumList<E>(comp);
+		
+		//copy elements from previous l2arrays into new l2arrys in newAL
+		for (int i = 0; i < l1numUsed; i++) {
+			L2Array originalArray = (L2Array)l1array[i];
+			newAL.l1array[i] = new L2Array(originalArray.numUsed);
+			System.arraycopy(originalArray.items, 0, ((L2Array)newAL.l1array[i]).items, 0, originalArray.numUsed);
+			((L2Array)newAL.l1array[i]).numUsed = originalArray.numUsed;
+		}
 		newAL.mergeAllLevels();
-		System.out.println(Arrays.toString(((L2Array)newAL.l1array[0]).items));
+		
+		//Find proper start and end indexes
 		int startIndex = findFirstInArray(fromElement, (L2Array)newAL.l1array[0]);
 		if (startIndex < 0) startIndex = -startIndex - 1;
 		int sizeToCopy = findIndexAfter(toElement, (L2Array)newAL.l1array[0]) - startIndex;
+		
+		//Create new array of proper size for sublist and copy elements over
 		int arraySize =  (int) Math.pow(2,Math.floor(((Math.log10(sizeToCopy)/Math.log10(2)) + 1)));					//power of 2 closest to, but greater than, number of elements copied
 		E[] tempArray = (E[])new Object[arraySize];
 		System.arraycopy(((L2Array)(newAL.l1array[0])).items, startIndex, tempArray, 0, sizeToCopy);
-		((L2Array)(newAL.l1array[0])).items = tempArray;
+		((L2Array)(newAL.l1array[0])).items = tempArray;																//assigns new array to AddendumList
 		return newAL;
 	}
 
-	/**
-	 * returns an iterator for this list
-	 * this method just merges the items into a single array and creates an instance of the inner Itr() class
-	 * (DONE)   
-	 */
 	public Iterator<E> iterator() {
-		mergeAllLevels();
+		//POST: returns iterator for AddendumList
+		mergeAllLevels();							//merges all l2 arrays into a single array
 		return new Itr();
 	}
 
-	/**
-	 * Iterator 
-	 */
+	//Iterator
 	private class Itr implements Iterator<E> {
+		//POST: creates iterator at start of AddendumList
 		int index;
-
-		/*
-		 * create iterator at start of list
-		 */
+		
 		Itr(){
 			index = 0;
-			// TO DO
-
 		}
 
-		/**
-		 * check if more items
-		 */
 		public boolean hasNext() {
-			// TO DO
-			if ((index < ((L2Array)l1array[0]).numUsed) && (((L2Array)l1array[0]).items[index + 1] != null)) return true;
+			//POST: returns true if index has not reached end of array
+			if ((index < ((L2Array)l1array[0]).numUsed)) return true;
 			return false;
 		}
 
-		/**
-		 * return item and move to next
-		 * throws NoSuchElementException if off end of list
-		 */
 		public E next() {
-			// TO DO
-			index++;
-			return ((L2Array)l1array[0]).items[index - 1];
+			//POST: returns item at index or throws NoSuchElementException if index is greater than size of array
+			if (hasNext()) {
+				index++;
+				return ((L2Array)l1array[0]).items[index - 1];
+			}
+			else throw new NoSuchElementException();
 		}
 
-		/**
-		 * Remove is not implemented. Just use this code.
-		 * (DONE)
-		 */
+		//NOT YET IMPLEMENTED
 		public void remove() {
 			throw new UnsupportedOperationException();	
 		}
