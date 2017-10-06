@@ -188,8 +188,9 @@ public class AddendumList<E> implements Iterable<E> {
 			//MAKE NEW ARRAY
 			if (l1numUsed == l1array.length) {
 				//L1array full, resize by 150% and copy over
-				Object[] tempArray = new Object[(int)(l1numUsed * 1.5)];	//resize l1array by 150%. Java does it for ArrayLists, so it must be good
+				Object[] tempArray = new Object[(int) Math.ceil((l1numUsed * 1.5))];	//resize l1array by 150%. Java does it for ArrayLists, so it must be good
 				System.arraycopy(l1array, 0, tempArray, 0, l1numUsed);
+				l1array = tempArray;
 			}
 			l1array[l1numUsed] = new L2Array(L2_MINIMUM_SIZE);
 			l1numUsed++;													//added new l2array
@@ -215,6 +216,12 @@ public class AddendumList<E> implements Iterable<E> {
 				}
 			}
 			if (((L2Array)(l1array[l1numUsed - 1])).numUsed == ((L2Array)(l1array[l1numUsed - 1])).items.length) {
+				if (l1numUsed == l1array.length) {
+					//L1array full, resize by 150% and copy over
+					Object[] tempArray = new Object[(int) Math.ceil((l1numUsed * 1.5))];	//resize l1array by 150%. Java does it for ArrayLists, so it must be good
+					System.arraycopy(l1array, 0, tempArray, 0, l1numUsed);
+					l1array = tempArray;
+				}
 				l1array[l1numUsed] = new L2Array(L2_MINIMUM_SIZE);
 				l1numUsed++;
 			}
@@ -239,12 +246,13 @@ public class AddendumList<E> implements Iterable<E> {
 			else newArray.items[lastIndex + secondLastIndex] = secondLastArray.items[secondLastIndex++];
 			newArray.numUsed++;
 		}
-		
 		while (lastIndex < lastArray.numUsed) {
 			newArray.items[lastIndex + secondLastIndex] = lastArray.items[lastIndex++];
+			newArray.numUsed++;
 		}
 		while (secondLastIndex < secondLastArray.numUsed) {
 			newArray.items[lastIndex + secondLastIndex] = secondLastArray.items[secondLastIndex++];
+			newArray.numUsed++;
 		}
 		l1array[l1numUsed - 2] = newArray;
 		l1array[l1numUsed - 1] = null;
