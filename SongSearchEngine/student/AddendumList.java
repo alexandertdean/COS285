@@ -306,6 +306,7 @@ public class AddendumList<E> implements Iterable<E> {
 		//POST: returns an AddendumList with elements inclusively between fromElement and toElement
 		AddendumList<E> newAL = new AddendumList<E>(comp);
 		newAL.l1numUsed = 0;
+		newAL.l1array = new Object[l1numUsed];
 		//copy elements from previous l2arrays into new l2arrys in newAL
 		for (int i = 0; i < this.l1numUsed; i++) {
 			L2Array originalArray = (L2Array)l1array[i];
@@ -319,13 +320,16 @@ public class AddendumList<E> implements Iterable<E> {
 		//Find proper start and end indexes
 		int startIndex = findFirstInArray(fromElement, (L2Array)newAL.l1array[0]);
 		if (startIndex < 0) startIndex = -startIndex - 1;
-		int sizeToCopy = findIndexAfter(toElement, (L2Array)newAL.l1array[0]) - startIndex;
+		int lastIndex = findIndexAfter(toElement, (L2Array)newAL.l1array[0]);	
+		while (comp.compare(toElement, ((L2Array)newAL.l1array[0]).items[lastIndex - 1]) == 0) lastIndex--;
+		int sizeToCopy =  lastIndex - startIndex;
 		
 		//Create new array of proper size for sublist and copy elements over
 		E[] tempArray = (E[])new Object[sizeToCopy];
-		System.arraycopy(((L2Array)(newAL.l1array[0])).items, startIndex, tempArray, 0, sizeToCopy);
+		System.arraycopy(((L2Array)(newAL.l1array[0])).items, startIndex, tempArray, 0, sizeToCopy);				
 		((L2Array)(newAL.l1array[0])).items = tempArray;																//assigns new array to AddendumList
 		((L2Array)(newAL.l1array[0])).numUsed = sizeToCopy;
+		newAL.size = sizeToCopy;
 		return newAL;
 	}
 

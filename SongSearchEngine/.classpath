@@ -4,5 +4,6 @@
 	<classpathentry kind="src" path=""/>
 	<classpathentry kind="lib" path="Scaffold.jar"/>
 	<classpathentry kind="lib" path="AddendumListTesterProg4.jar"/>
+	<classpathentry kind="lib" path="SongSearch.jar"/>
 	<classpathentry kind="output" path=""/>
 </classpath>
