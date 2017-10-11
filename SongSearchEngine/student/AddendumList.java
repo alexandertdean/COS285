@@ -259,21 +259,14 @@ public class AddendumList<E> implements Iterable<E> {
 		l1numUsed--;
 	}
 	
-	// merge all levels
-	// this is used by iterator(), toArray() and subList()
-	// this makes these easy to implement. and the O(N) full merge time would likely be required for these operations anyway
-	// Note: after merging, all items will be in the first l2array, but there may still be a second empty level2 addendum array
-	// at the end.
-	// The result of the merging should still be a valid addendum array with room to add in the last addendum array.
-	// The merging will likely cause the size of the array to no longer be a power of two.
+	
 	private void mergeAllLevels() {
-		while (l1numUsed > 1) {
+		//POST: L2 array at first index contains all elements in AddendumList in stable sorted order
+		while (l1numUsed > 1) {									//merges last two L2 arrays until only one array is left
 			merge1Level();
 		}
-		if  (((L2Array)l1array[0]).items.length == ((L2Array)l1array[0]).numUsed) {
-			l1numUsed++;
-			l1array[1] = new L2Array(L2_MINIMUM_SIZE);
-		}
+		l1numUsed++;
+		l1array[1] = new L2Array(L2_MINIMUM_SIZE);				//creates new empty L2 array in next index
 	}
 
 	/**
@@ -284,6 +277,7 @@ public class AddendumList<E> implements Iterable<E> {
 	public E[] toArray(E[] a){
 		AddendumList<E> newAL = new AddendumList<E>(comp);
 		newAL.l1numUsed = 0;
+		
 		//copy elements from previous l2arrays into new l2arrys in newAL
 		for (int i = 0; i < this.l1numUsed; i++) {
 			L2Array originalArray = (L2Array)l1array[i];
@@ -307,6 +301,7 @@ public class AddendumList<E> implements Iterable<E> {
 		AddendumList<E> newAL = new AddendumList<E>(comp);
 		newAL.l1numUsed = 0;
 		newAL.l1array = new Object[l1numUsed];
+		
 		//copy elements from previous l2arrays into new l2arrys in newAL
 		for (int i = 0; i < this.l1numUsed; i++) {
 			L2Array originalArray = (L2Array)l1array[i];
@@ -319,9 +314,9 @@ public class AddendumList<E> implements Iterable<E> {
 		
 		//Find proper start and end indexes
 		int startIndex = findFirstInArray(fromElement, (L2Array)newAL.l1array[0]);
-		if (startIndex < 0) startIndex = -startIndex - 1;
-		int lastIndex = findIndexAfter(toElement, (L2Array)newAL.l1array[0]);	
-		while (comp.compare(toElement, ((L2Array)newAL.l1array[0]).items[lastIndex - 1]) == 0) lastIndex--;
+		if (startIndex < 0) startIndex = -startIndex - 1;									//element not in array, switch to positive index
+		int lastIndex = findFirstInArray(toElement, (L2Array)newAL.l1array[0]);
+		if (lastIndex < 0) lastIndex = -lastIndex - 1;										//element not in array, switch to positive index
 		int sizeToCopy =  lastIndex - startIndex;
 		
 		//Create new array of proper size for sublist and copy elements over
