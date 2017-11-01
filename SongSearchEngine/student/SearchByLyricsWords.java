@@ -16,15 +16,10 @@ public class SearchByLyricsWords {
 	
 	public SearchByLyricsWords(SongCollection sc) throws FileNotFoundException {
 		String[] lyrics;
-		Scanner fileInput = new Scanner(new FileReader("commonWords.txt"));
-		commonWords = new TreeSet<String>();
+		commonWords = new TreeSet<String>(Arrays.asList("the", "of", "and", "a", "to", "in", "is", "you", "that", "it", "he", "for", "was", "on", "are", "as", "with", "his", "they", "at", "be", "this", "from", "I", "have", "or", "by", "one", "had", "not", "but", "what", "all", "were", "when", "we", "there", "can", "an", "your", "which", "their", "if", "do", "will", "each", "how", "them", "then", "she", "many", "some", "so", "these", "would", "into", "has", "more", "her", "two", "him", "see", "could", "no", "make", "than", "been", "its", "now", "my", "made", "did", "get", "our", "me", "too"));
 		map = new TreeMap<String,TreeSet<Song>>();
-		while (fileInput.hasNext()) {
-			commonWords.add(fileInput.next());
-		}
-		fileInput.close();
 		for(Song song : sc.getAllSongs()) {
-			lyrics = song.getLyrics().split("[^a-zA-z]|`|\\[|\\]|(\\\\)|_", 0);
+			lyrics = song.getLyrics().split("[^a-zA-Z]", 0);
 			for (String word : lyrics) {
 				word = word.toLowerCase();
 				if (!commonWords.contains(word) && (word.length() > 1) && !map.containsKey(word)) {
@@ -38,22 +33,17 @@ public class SearchByLyricsWords {
 	}
 	
 	public static void main(String[] args) throws FileNotFoundException {
-		SongCollection sc = new SongCollection("allSongs.txt");
+		if (args.length == 0) {
+			System.out.println("Invalid number of arguments.");
+			return;
+		}
+		
+		SongCollection sc = new SongCollection(args[0]);
 		SearchByLyricsWords search = new SearchByLyricsWords(sc);
-		Scanner debugger = new Scanner(new FileReader("debugAllKeysInMap.txt"));
-		while (debugger.hasNext()) {
-			String temp = debugger.next();
-			if (!search.map.containsKey(temp)) System.out.println("No value for " + temp);
-		}
-		debugger = new Scanner(new FileReader("debugAllKeysAndCounts.txt"));
-		while (debugger.hasNext()) {
-			String temp = debugger.next();
-			int tempCnt = debugger.nextInt();
-			if (search.map.get(temp).size() != tempCnt) System.out.println("File says " + tempCnt + " for " + temp + ". Found " + search.map.get(temp).size());
-		}
+
 		search.statistics();
-		if (args.length > 0) {
-			if (args[0].equals("-top10words")) {
+		if (args.length > 1) {
+			if (args[1].equals("-top10words")) {
 				search.top10words();
 			}
 		}
