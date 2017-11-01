@@ -52,8 +52,10 @@ public class SearchByLyricsWords {
 			if (search.map.get(temp).size() != tempCnt) System.out.println("File says " + tempCnt + " for " + temp + ". Found " + search.map.get(temp).size());
 		}
 		search.statistics();
-		if (args[0].equals("-top10words")) {
-			search.top10words();
+		if (args.length > 0) {
+			if (args[0].equals("-top10words")) {
+				search.top10words();
+			}
 		}
 	}
 	
