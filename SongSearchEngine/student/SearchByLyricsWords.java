@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -14,7 +13,7 @@ public class SearchByLyricsWords {
 	public TreeSet<String> commonWords;
 	public TreeMap<String,TreeSet<Song>> map;
 	
-	public SearchByLyricsWords(SongCollection sc) throws FileNotFoundException {
+	public SearchByLyricsWords(SongCollection sc) {
 		String[] lyrics;
 		commonWords = new TreeSet<String>(Arrays.asList("the", "of", "and", "a", "to", "in", "is", "you", "that", "it", "he", "for", "was", "on", "are", "as", "with", "his", "they", "at", "be", "this", "from", "I", "have", "or", "by", "one", "had", "not", "but", "what", "all", "were", "when", "we", "there", "can", "an", "your", "which", "their", "if", "do", "will", "each", "how", "them", "then", "she", "many", "some", "so", "these", "would", "into", "has", "more", "her", "two", "him", "see", "could", "no", "make", "than", "been", "its", "now", "my", "made", "did", "get", "our", "me", "too"));
 		map = new TreeMap<String,TreeSet<Song>>();
@@ -32,7 +31,7 @@ public class SearchByLyricsWords {
 		}
 	}
 	
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) {
 		if (args.length == 0) {
 			System.out.println("Invalid number of arguments.");
 			return;
