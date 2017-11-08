@@ -1,7 +1,5 @@
 package student;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -102,18 +100,22 @@ public class SearchByLyricsWords {
 		System.out.println("Size usage: " + (((mapSize + songCount) * 6) / songCount) + "N");
 	}
 	
+	
 	public Song[] search(String lyricsWords) {
 		TreeSet<Song> result = new TreeSet<Song>();
 		String[] searchWords = lyricsWords.split("[^a-zA-Z]");
 		for (String word : searchWords) {
 			word = word.toLowerCase();
-			if (commonWords.contains(word) || word.length() < 2);
-			else if (result.isEmpty()) {
-				if (map.containsKey(word)) {
-					result.addAll(this.map.get(word));
+			if (commonWords.contains(word) || word.length() < 2);						//throw out word
+			else {
+				if (!map.containsKey(word)) {
+					return new Song[0];
 				}
-			} else {
-				result.retainAll(this.map.get(word));
+				else if (result.isEmpty()) {
+					result.addAll(map.get(word));
+				} else {
+					result.retainAll(map.get(word));
+				}
 			}
 		}
 		return result.toArray(new Song[result.size()]);
