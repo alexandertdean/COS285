@@ -40,10 +40,17 @@ public class SearchByLyricsWords {
 		
 		SongCollection sc = new SongCollection(args[0]);
 		SearchByLyricsWords search = new SearchByLyricsWords(sc);
-
-		search.statistics();
 		if (args.length > 1) {
-			if (args[1].equals("-top10words")) {
+			System.out.println("Search for: " + args[1]);
+			Song[] result = search.search(args[1]);
+			System.out.println("Result size: " + result.length);
+			for (int i = 0; i < Math.min(result.length,10); i++) {
+				System.out.println(result[i]);
+			}
+		}
+		
+		if (args.length > 2) {
+			if (args[2].equals("-top10words")) {
 				search.top10words();
 			}
 		}
@@ -94,6 +101,23 @@ public class SearchByLyricsWords {
 		System.out.println("Size of all Tree Sets: " + songCount * 6);
 		System.out.println("Size of Data Structure: " + ((mapSize + songCount) * 6));
 		System.out.println("Size usage: " + (((mapSize + songCount) * 6) / songCount) + "N");
+	}
+	
+	public Song[] search(String lyricsWords) {
+		TreeSet<Song> result = new TreeSet<Song>();
+		String[] searchWords = lyricsWords.split("[^a-zA-Z]");
+		for (String word : searchWords) {
+			word = word.toLowerCase();
+			if (commonWords.contains(word) || word.length() < 2);
+			else if (result.isEmpty()) {
+				if (map.containsKey(word)) {
+					result.addAll(this.map.get(word));
+				}
+			} else {
+				result.retainAll(this.map.get(word));
+			}
+		}
+		return result.toArray(new Song[result.size()]);
 	}
 	
 	public class compareRank implements Comparator<RankedItem> {
