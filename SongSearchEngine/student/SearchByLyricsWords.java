@@ -108,13 +108,11 @@ public class SearchByLyricsWords {
 			word = word.toLowerCase();
 			if (commonWords.contains(word) || word.length() < 2);						//throw out word
 			else {
-				System.out.println(map.get(word).size());
 				if (!map.containsKey(word)) {
 					return new Song[0];
 				}
 				else if (result.isEmpty()) {
 					result.addAll(map.get(word));
-					System.out.println("Add " + result.size());
 				} else {
 					result.retainAll(map.get(word));
 					if (result.isEmpty()) {
