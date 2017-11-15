@@ -1,6 +1,5 @@
 package student;
 
-import java.util.Arrays;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,44 +14,39 @@ public class PhraseRanking
 		int lastIndex = 0;
 		int index = 0;
 		int prevIndex = 0;
-		String[] words = lyricsPhrase.split("[^a-zA-Z]", 0);
-		while(true) 
+		String[] words = lyricsPhrase.split("[^a-zA-Z]", 0);					//divides phrase into array of words
+		while(true) 										
 		{
+			//GO FORWARDS THROUGH SONG AND FIND ANY PHRASE THAT HAS A RANK
 			for (int i = 0; i < words.length; i++)
 			{
-				Matcher m = Pattern.compile("\\b" + words[i] + "\\b").matcher(lyrics.substring(prevIndex));
-				if (!m.find()) {
-					if (ranks.isEmpty()) return 0;
-					else return ranks.first();
+				Matcher match = Pattern.compile("\\b" + words[i] + "\\b").matcher(lyrics.substring(prevIndex));
+				if (!match.find()) {											//checks if next word is found in remaining song
+					if (ranks.isEmpty()) return 0;								//no matches found
+					else return ranks.first();									//returns lowest rank
 				}
-				index = lyrics.substring(prevIndex).indexOf(words[i]);
-				if (index < 0)
+				else 
 				{
-					if (ranks.isEmpty()) return 0;
-					else return ranks.first();
+					index = match.start() + words[i].length() + prevIndex;		//sets index to end of the matched word
 				}
-				index = index + words[i].length() + prevIndex;
-				
-				Matcher p = Pattern.compile("(\\b" + words[i] + "\\b)").matcher(lyrics.substring(prevIndex, index + 1));
-				if (!p.find()) {
-					i--;
-				}
-				
-				prevIndex = index;
+				prevIndex = index;												//increments index
 			}
-			lastIndex = index;
+			
+			lastIndex = index;													//last index solidified
+			
+			//GO BACKWARDS AND MAKE SURE RANK IS AS SMALL AS POSSIBLE
 			for (int i = words.length; i > 0; i--)
 			{
-				index = lyrics.substring(0, prevIndex).lastIndexOf(words[i-1]);
+				index = lyrics.substring(0, prevIndex + 1).lastIndexOf(words[i-1]);		//finds closest match of word to next word
 				Matcher p = Pattern.compile("(\\b" + words[i - 1] + "\\b)").matcher(lyrics.substring(index, prevIndex));
-				if (!p.find())
+				if (!p.find())													//checks if word is actually whole word, or just part of a larger word
 				{
-					i++;
+					i++;														//repeat this word with new starting point
 				}
 				prevIndex = index;
 			}
-			ranks.add(lastIndex - index);
-			prevIndex = lastIndex;
+			ranks.add(lastIndex - index);										//adds ranking of this phrase to set of ranks
+			prevIndex = lastIndex;												//check rest of the song after already found matches
 		}
 		
 	}
@@ -69,11 +63,12 @@ public class PhraseRanking
 		SearchByLyricsWords searchFn = new SearchByLyricsWords(sc);
 		Song[] unranked = searchFn.search(args[1]);
 		int count = 0;
+		
 		for(Song s : unranked)
 		{
-			
 			int rank = rankPhrase(s.getLyrics(), args[1]);
-			if (rank > 0) {
+			if (rank > 0) 
+			{
 				System.out.println(rank + " " + s.toString());
 				count++;
 			}
