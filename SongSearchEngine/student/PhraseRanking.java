@@ -8,47 +8,51 @@ public class PhraseRanking
 {
 	static int rankPhrase(String lyrics, String lyricsPhrase) 
 	{
+		
+		int firstIndex = 0;
+		int prevIndex;
+		int index = 0;
+		int startingPoint = 0;
 		TreeSet<Integer> ranks = new TreeSet<Integer>();
 		lyrics = lyrics.toLowerCase();
 		lyricsPhrase = lyricsPhrase.toLowerCase();
-		int lastIndex = 0;
-		int index = 0;
-		int prevIndex = 0;
 		String[] words = lyricsPhrase.split("[^a-zA-Z]", 0);					//divides phrase into array of words
-		while(true) 										
+		while(true)									//continues until code returns
 		{
-			//GO FORWARDS THROUGH SONG AND FIND ANY PHRASE THAT HAS A RANK
-			for (int i = 0; i < words.length; i++)
+			int i = 0;
+			prevIndex = startingPoint;
+			while (i < words.length)
 			{
-				Matcher match = Pattern.compile("\\b" + words[i] + "\\b").matcher(lyrics.substring(prevIndex));
-				if (!match.find()) {											//checks if next word is found in remaining song
-					if (ranks.isEmpty()) return 0;								//no matches found
-					else return ranks.first();									//returns lowest rank
-				}
-				else 
+				index = lyrics.substring(prevIndex).indexOf(words[i]) + prevIndex;
+				if (index < prevIndex) return ranks.isEmpty() ? 0 : ranks.first();
+				prevIndex = index + words[i].length();
+				if (isValidMatch(index, words[i], lyrics))
 				{
-					index = match.start() + words[i].length() + prevIndex;		//sets index to end of the matched word
+					if (i == 0) 
+					{
+						firstIndex = index;
+						startingPoint = prevIndex;
+					}
+					i++;
 				}
-				prevIndex = index;												//increments index
 			}
-			
-			lastIndex = index;													//last index solidified
-			
-			//GO BACKWARDS AND MAKE SURE RANK IS AS SMALL AS POSSIBLE
-			for (int i = words.length; i > 0; i--)
-			{
-				index = lyrics.substring(0, prevIndex + 1).lastIndexOf(words[i-1]);		//finds closest match of word to next word
-				Matcher p = Pattern.compile("(\\b" + words[i - 1] + "\\b)").matcher(lyrics.substring(index, prevIndex));
-				if (!p.find())													//checks if word is actually whole word, or just part of a larger word
-				{
-					i++;														//repeat this word with new starting point
-				}
-				prevIndex = index;
-			}
-			ranks.add(lastIndex - index);										//adds ranking of this phrase to set of ranks
-			prevIndex = lastIndex;												//check rest of the song after already found matches
+			if ((prevIndex - firstIndex) == lyricsPhrase.length()) return prevIndex - firstIndex;
+			ranks.add(prevIndex - firstIndex);
 		}
 		
+	}
+	
+	private static boolean isValidMatch(int index, String word, String subLyrics)
+	{
+		if (index == 0 || !Character.isAlphabetic(subLyrics.charAt(index - 1)))
+		{
+			if (((index + word.length()) >= subLyrics.length()) || !Character.isAlphabetic(subLyrics.charAt(index + word.length())))
+			{
+				return true;
+			}
+			else return false;
+		}
+		else return false;
 	}
 	
 	public static void main(String args[])
